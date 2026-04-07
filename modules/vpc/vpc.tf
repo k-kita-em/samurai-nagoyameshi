@@ -25,7 +25,7 @@ resource "aws_subnet" "dev_pub_subnet1" {
     availability_zone = "ap-northeast-1a"
 
     tags = {
-        Name = "${var.project_env}-pub-subnet1"
+        Name = "${var.project_env}-pub-appsubnet-a1"
     }
   
 }
@@ -36,7 +36,7 @@ resource "aws_subnet" "dev_pub_subnet2" {
     availability_zone = "ap-northeast-1c"
 
     tags = {
-        Name = "${var.project_env}-pub-subnet2"
+        Name = "${var.project_env}-pub-appsubnet-1c"
     }
   
 }
@@ -47,7 +47,7 @@ resource "aws_subnet" "dev_pri_subnet1" {
     availability_zone = "ap-northeast-1a"
 
     tags = {
-        Name = "${var.project_env}-pri-subnet1"
+        Name = "${var.project_env}-pri-appsubnet-1a"
     }
   
 }
@@ -58,7 +58,7 @@ resource "aws_subnet" "dev_pri_subnet2" {
     availability_zone = "ap-northeast-1c"
 
     tags = {
-        Name = "${var.project_env}-pri-subnet2"
+        Name = "${var.project_env}-pri-appsubnet-1c"
     }
 }
 resource "aws_subnet" "dev_pri_subnet3" {
@@ -68,7 +68,19 @@ resource "aws_subnet" "dev_pri_subnet3" {
     availability_zone = "ap-northeast-1a"
 
     tags = {
-        Name = "${var.project_env}-pri-subnet3"
+        Name = "${var.project_env}-pri-RDSsubnet-1a"
+    }
+  
+}
+
+resource "aws_subnet" "dev_pri_subnet4" {
+
+    vpc_id = aws_vpc.dev_vpc.id
+    cidr_block = "10.0.5.0/24"
+    availability_zone = "ap-northeast-1c"
+
+    tags = {
+        Name = "${var.project_env}-pri-RDSsubnet-1c"
     }
   
 }
@@ -164,35 +176,47 @@ resource "aws_route_table" "dev_pri3_rt" {
     Name = "${var.project_env}-pri3-rt"}
   
 }
-resource "aws_route""dev_pri3" {
-  route_table_id = aws_route_table.dev_pri3_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id = aws_nat_gateway.nat_pub1.id
-}
 
 resource "aws_route_table_association" "dev_pri3" {
   subnet_id = aws_subnet.dev_pri_subnet3.id
   route_table_id = aws_route_table.dev_pri3_rt.id
   
 }
-#alb用のセキュリティグループ
-# resource "aws_security_group" "dev_vpc_sg" {
-#     vpc_id = aws_vpc.dev_vpc.id
-#     name = "dev_vpc_sg"
-#     description = "vpcで使うsg"
-
-#     tags = {
-#         Name = "${var.project_env}-vpc-sg"}
-#     }
+resource "aws_route_table_association" "dev_pri4" {
+  subnet_id = aws_subnet.dev_pri_subnet4.id
+  route_table_id = aws_route_table.dev_pri3_rt.id
   
-# resource "aws_security_group_ingress_rule" "dev_vpc_sg_ingress" {
-#     security_group_id = aws_security_group.dev_vpc_sg.id
+}
 
-#     cidr_ipv4 = "0.0.0.0/0"
-#     from_port = 80
-#     ip_protocol = "tcp"
-#     to_port = 80
+#セキュリティグループ
+resource "aws_security_group" "dev_vpc_sg" {
+    vpc_id = aws_vpc.dev_vpc.id
+    name = "dev_vpc_sg"
+
+    tags = {
+        Name = "${var.project_env}-web-sg"}
+    }
+  
+resource "aws_vpc_security_group_ingress_rule" "dev_web_http" {
+    security_group_id = aws_security_group.dev_vpc_sg.id
+
+    cidr_ipv4 = "0.0.0.0/0"
+    from_port = 80
+    ip_protocol = "tcp"
+    to_port = 80
 
     
   
-# }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "dev_web_https" {
+    security_group_id = aws_security_group.dev_vpc_sg.id
+
+    cidr_ipv4 = "0.0.0.0/0"
+    from_port = 443
+    ip_protocol = "tcp"
+    to_port = 443
+
+    
+  
+}
